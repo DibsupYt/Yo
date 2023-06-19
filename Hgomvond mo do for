@@ -1,0 +1,27 @@
+sudo pacman -S base-devel librsvg postgresql
+sudo apt install libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev postgresql librsvg2-bin libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev
+sudo dnf install -y openssl-devel libevent-devel libxml2-devel libyaml-devel gmp-devel readline-devel postgresql librsvg2-devel sqlite-devel zlib-devel gcc
+useradd -m invidious
+su - invidious
+git clone https://github.com/iv-org/invidious
+exit
+systemctl enable --now postgresql
+sudo -i -u postgres
+psql -c "CREATE USER kemal WITH PASSWORD 'kemal';" # Change 'kemal' here to a stronger password, and update `password` in config/config.yml
+createdb -O kemal invidious
+exit
+su - invidious
+cd invidious
+make
+
+# Configure config/config.yml as you like
+cp config/config.example.yml config/config.yml 
+
+# Deploy the database
+./invidious --migrate
+
+exit
+
+crystal build src/invidious.cr -Ddisable_quic --release
+cp /home/invidious/invidious/invidious.service /etc/systemd/system/invidious.service
+systemctl enable --now invidious.service
